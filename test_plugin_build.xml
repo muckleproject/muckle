@@ -1,0 +1,58 @@
+<project name="test_plugin" default="dist" basedir=".">
+	<description>
+   	Builds the test plugin.
+  </description>
+	<!-- set global properties for this build -->
+	<property name="src" location="src/org"/>
+	<property name="build" location="build/jarfile"/>
+	<property name="testsrc" location="src/test"/>
+	<property name="testclasses" location="build/testclasses"/>
+	<property name="dist"  location="dist"/>
+	<property name="libs"  location="libs"/>
+
+
+	<target name="init" depends="clean">
+		<!-- Create the time stamp -->
+		<tstamp/>
+		<!-- Create the build directory structure used by compile -->
+		<mkdir dir="${build}"/>
+	</target>
+
+	<target name="compile_interface" depends="init"  description="compile the source " >
+		<javac includeantruntime="false" srcdir="${src}" destdir="${build}" includes="**/jsobjectloaderservice/**">
+			<classpath>
+				<fileset dir="${libs}/runtime" includes="*.jar"/>
+			</classpath>
+		</javac>
+	</target>
+
+	<target name="compile" depends="compile_interface"  description="compile the source " >
+		<javac includeantruntime="false" srcdir="${testsrc}" destdir="${build}" includes="**/testplugin/**">
+			<classpath>
+				<pathelement path="${build}"/>
+			    <fileset dir="${libs}/runtime" includes="*.jar"/>
+			</classpath>
+		</javac>
+	</target>
+
+
+	<target name="dist" depends="compile" description="generate the distribution directory structure and contents" >
+		<!-- build print jar. NOTE it is built from same place and copies extra stuff in -->
+		<copy todir="${build}/META-INF">
+			<fileset dir="TEST_META-INF" />
+		</copy>
+		<jar destfile="${libs}/test/${ant.project.name}.jar" basedir="${build}" excludes="org/**" />
+		<!-- clean up -->
+		<delete dir="${build}"/>
+		<delete dir="${testclasses}"/>
+	</target>
+
+	<target name="clean"  description="clean up" >
+		<!-- Delete the ${build} and ${dist} directory trees -->
+		<delete dir="${build}"/>
+		<delete dir="${dist}/libs"/>
+		<delete dir="${dist}"/>
+		<delete dir="${testclasses}"/>
+	</target>
+
+</project>

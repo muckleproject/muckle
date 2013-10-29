@@ -1,0 +1,123 @@
+<project name="muckle" default="run" basedir=".">
+	<description>
+   	A muckle load of fun.
+  </description>
+	<!-- set global properties for this build -->
+	<property name="src" location="src/org"/>
+	<property name="build" location="build/jarfile"/>
+	<property name="testsrc" location="src/test"/>
+	<property name="testclasses" location="build/testclasses"/>
+	<property name="dist"  location="dist"/>
+	<property name="libs"  location="libs"/>
+
+
+	<target name="init" depends="clean">
+		<!-- Create the build directory structure used by compile -->
+		<mkdir dir="${build}"/>
+		<mkdir dir="${testclasses}"/>
+	</target>
+
+	<target name="compile" depends="init"  description="compile the source " >
+		<!-- Compile the java code from ${src} into ${build} -->
+		<javac includeantruntime="false" srcdir="${src}" destdir="${build}">
+			<classpath>
+				<fileset dir="${libs}/runtime" includes="*.jar"/>
+			</classpath>
+		</javac>
+	</target>
+
+	<target name="test" depends="compile" >
+		<javac includeantruntime="false" srcdir="${testsrc}" destdir="${testclasses}">
+			<classpath>
+				<pathelement path="${build}"/>
+				<fileset dir="${libs}/runtime" includes="*.jar"/>
+				<fileset dir="${libs}/test" includes="*.jar"/>
+				<fileset dir="${libs}/test/jetty" includes="*.jar"/>
+			</classpath>
+		</javac>
+		<copy todir="${testclasses}/test/testFiles">
+			<fileset dir="${testsrc}/testfiles" />
+		</copy>
+		<junit>
+			<classpath>
+				<pathelement path="${testclasses}"/>
+				<pathelement path="${build}"/>
+				<fileset dir="${libs}/runtime" includes="*.jar"/>
+				<fileset dir="${libs}/test" includes="*.jar"/>
+				<fileset dir="${libs}/test/jetty" includes="*.jar"/>
+			</classpath>
+			<batchtest fork="yes" haltonfailure="true" >
+				<formatter usefile="false" type="brief"/>
+				<fileset dir="${testclasses}">
+					<include name="test/org/**/*Test.class"/>
+					<exclude name="test/org/**/JSAsyncClientTest.class"/>
+				</fileset>
+			</batchtest>
+		</junit>
+	</target>
+
+	<target name="dist" depends="test" description="generate the distribution directory structure and contents" >
+		<mkdir dir="${dist}"/>
+		<!-- copy in license file -->
+		<copy todir="${dist}" file="LICENSE.md"/>
+		<!-- copy in script files -->
+		<copy todir="${dist}">
+			<fileset dir="scripts" includes="*"/>
+		</copy>
+		<fixcrlf srcdir="${dist}" includes="**/*.sh"  eol="lf" eof="remove" />
+		<fixcrlf srcdir="${dist}" includes="**/*.bat" eol="crlf" />
+		<!-- copy in examples -->
+		<copy todir="${dist}/examples">
+			<fileset dir="examples" includes="*"/>
+		</copy>
+		<!-- copy in jslibs -->
+		<copy todir="${dist}/jslibs">
+			<fileset dir="jslibs" includes="*"/>
+		</copy>
+		<!-- copy in jslibs/tests -->
+		<copy todir="${dist}/jslibs/test">
+			<fileset dir="jslibs/test" includes="*"/>
+		</copy>
+		<!-- copy required runtime jars -->
+		<mkdir dir="${dist}/libs"/>
+		<copy todir="${dist}/libs">
+			<fileset dir="${libs}/runtime" includes="*.jar, *.txt"/>
+		</copy>
+		<!-- copy in license file for jar -->
+		<copy todir="${build}" file="LICENSE.md"/>
+		<!-- build muckle jar -->
+		<jar destfile="${dist}/libs/${ant.project.name}.jar" basedir="${build}" excludes="**/jsprint/**">
+		   <manifest>
+		        <attribute name="Main-Class" value="org.sh.muckle.Version"/>
+		    </manifest>
+		</jar>
+		<!-- build print jar. NOTE it is built from same place and copies extra stuff in -->
+		<copy todir="${build}/META-INF">
+			<fileset dir="PRINT_META-INF" />
+		</copy>
+		<jar destfile="${dist}/libs/${ant.project.name}-print.jar" basedir="${build}" includes="LICENSE.md,**/jsprint/**,META-INF/**"/>
+	</target>
+
+    <target name="js tests" depends="dist">
+        <java classpath="${dist}/libs/*;${testclasses}" failonerror="true" classname="test.org.sh.muckle.runtime.js.BuildRunner" fork="true">
+        	<arg line="${dist}/jslibs/munitRunner.js test/munitTest.js test/encodeHelperTest.js 
+        		test/exampleObjectTest.js test/statsHelperTest.js"/>
+        </java>
+		<!-- clean up -->
+		<delete dir="${build}"/>
+		<delete dir="${testclasses}"/>
+   </target>
+
+    <target name="run" depends="js tests">
+        <java jar="${dist}/libs/${ant.project.name}.jar" fork="true"/>
+    </target>
+
+	<target name="clean"  description="clean up" >
+		<!-- Delete the ${build} and ${dist} directory trees -->
+		<delete dir="${build}"/>
+		<delete dir="${dist}/libs"/>
+		<delete dir="${dist}"/>
+		<delete dir="${testclasses}"/>
+	</target>
+
+</project>
