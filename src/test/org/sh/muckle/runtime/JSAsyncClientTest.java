@@ -42,8 +42,7 @@ import org.sh.muckle.runtime.js.SessionRunnerConstructor;
 
 import test.org.sh.TempFileHelper;
 
-
-abstract public class JSAsyncClientTest extends JettyTestCase {
+abstract  public class JSAsyncClientTest extends JettyTestCase {
 	
 	TempFileHelper helper;
 	File root;
@@ -143,7 +142,7 @@ abstract public class JSAsyncClientTest extends JettyTestCase {
 		fw.write("var count = 0;\n");
 		fw.write("var retries;\n");
 		fw.write("session.onNextRequest = function (){retries = 0; req.delay = session.calcDelay(count * 1000); count++; return count <= max ? req : null;}\n");
-		fw.write("session.onHandleResponse = function (resp){resp.getContent();}\n");
+		fw.write("session.onHandleResponse = function (resp){if(resp.getContent().length != 10000){ throw 'Bad length '+  resp.getContent().length;};}\n");
 		fw.write("session.onHandleError = function (error){return retries-- > 0 ? HttpErrorAction.RETRY : HttpErrorAction.ABORT;}");
 		fw.close();
 		return s;

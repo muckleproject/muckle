@@ -25,19 +25,13 @@ import org.mozilla.javascript.Callable;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ContextAction;
 import org.mozilla.javascript.ContextFactory;
-import org.mozilla.javascript.Script;
 import org.mozilla.javascript.Scriptable;
-import org.mozilla.javascript.json.JsonParser;
-import org.mozilla.javascript.json.JsonParser.ParseException;
-import org.sh.muckle.jsobjectloaderservice.ClientScriptLoaderService;
 import org.sh.muckle.runtime.EHttpCommsError;
 import org.sh.muckle.runtime.EHttpErrorAction;
 import org.sh.muckle.runtime.HttpRequestDescriptor;
 import org.sh.muckle.runtime.IHttpRunHandler;
 
-public class ScriptRunner implements IHttpRunHandler, IHandlerFunctionsStorage {
-	
-	Scriptable scope;
+public class ScriptRunner extends BaseScriptRunner implements IHttpRunHandler, IHandlerFunctionsStorage {
 	
 	Callable nextRequest;
 	Callable handleResponse;
@@ -47,15 +41,12 @@ public class ScriptRunner implements IHttpRunHandler, IHandlerFunctionsStorage {
 	ResponseWrapper responseWrapper;
 	HttpErrorWrapper errorWrapper;
 	
-	RuntimeLogger logger;
-	
 	public ScriptRunner(File script, ScriptCache cache, RuntimeLogger logger, IParamsJsonSource source) throws Exception {
-		this.logger = logger;
+		super(script, cache, logger);
 		responseWrapper = new ResponseWrapper();
 		errorWrapper = new HttpErrorWrapper();
 		delayCalculator = new DelayCalculator();
 		
-		scope = buildScope(cache);
 		addRuntimeObjects(scope, script.getParentFile(), cache, source);
 		initScript(script, cache);
 		
@@ -65,6 +56,8 @@ public class ScriptRunner implements IHttpRunHandler, IHandlerFunctionsStorage {
 		}
 	}
 
+	//--------------- IHttpRunHandler methods ------------------------
+	
 	public HttpRequestDescriptor nextRequest() throws IOException {
 		HttpRequestDescriptor desc = null;
 		
@@ -119,12 +112,14 @@ public class ScriptRunner implements IHttpRunHandler, IHandlerFunctionsStorage {
 		
 		return action;
 	}
+
+	//----------- end IHttpRunHandler methods ------------------------
 	
+	//---------------------- IHandlerFunctionsStorage ----------------
+
 	public Callable getDelayCalculator(){
 		return delayCalculator;
 	}
-
-	//---------------------- IHandlerFunctionsStorage ----------
 
 	public void setNextRequestFunction(Callable f) {
 		this.nextRequest = f;
@@ -151,61 +146,13 @@ public class ScriptRunner implements IHttpRunHandler, IHandlerFunctionsStorage {
 	}
 	
 	//------------------ end IHandlerFunctionsStorage ----------
-
-	
-	Scriptable buildScope(ScriptCache cache){
-		return (Scriptable) ContextFactory.getGlobal().call(new ContextAction() {
-			public Object run(Context ctx) {
-				ctx.setOptimizationLevel(9);
-				return ctx.initStandardObjects();
-			}
-		});
-	}
-	
-	void initScript(File script, ScriptCache cache) throws IOException {
-		final Script s = cache.getScript(script);
-		ContextFactory.getGlobal().call(new ContextAction() {
-			public Object run(Context ctx) {
-				return s.exec(ctx, scope);
-			}
-		});
-	}
 	
 	void addRuntimeObjects(Scriptable scope, File scriptDir, ScriptCache cache, IParamsJsonSource source) throws Exception {
-		Require req = new Require(scriptDir, cache);
-		scope.put(Require.NAME, scope, req);
-		scope.put(ReadFile.NAME, scope, new ReadFile(req));
-		scope.put(WriteFile.NAME, scope, WriteFile.STATIC);
 		scope.put(RequestWrapperConstructor.NAME, scope, new RequestWrapperConstructor());
 		scope.put("HttpErrorAction", scope, HttpErrorAction.STATIC);
-		ClientScriptLoaderService.STATIC.loadScriptObjects(scope, scriptDir);
 		Object params = source != null ? buildParams(scope, source.getParamsJsonString()) : null;
 		Object common = source != null ? buildParams(scope, source.getCommonJsonString()) : null;
 		scope.put("session", scope, new SessionObject(this, params, common));
-	}
-	
-	 Object buildParams(final Scriptable scope, final String json) throws IOException {
-		Object params = null;
-		
-		if(json != null){
-			try {
-				params = ContextFactory.getGlobal().call(new ContextAction() {
-					public Object run(Context ctx) {
-						try {
-							return new JsonParser(ctx, scope).parseValue(json);
-						} 
-						catch (ParseException e) {
-							throw new RuntimeException(e);
-						}
-					}
-				});
-			}
-			catch(RuntimeException e){
-				throw new IOException(e.getMessage());
-			}
-		}
-
-		return params;
 	}
 
 
