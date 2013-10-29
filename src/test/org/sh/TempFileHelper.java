@@ -1,5 +1,3 @@
-package test.org.sh;
-
 /*
 *	Copyright 2013 The Muckle Project
 *
@@ -15,6 +13,9 @@ package test.org.sh;
 *	See the License for the specific language governing permissions and
 *	limitations under the License.
 */
+
+package test.org.sh;
+
 
 
 import java.io.File;
