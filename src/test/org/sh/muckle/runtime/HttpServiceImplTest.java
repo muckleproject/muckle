@@ -298,6 +298,20 @@ public class HttpServiceImplTest extends MockObjectTestCase {
 		callConnected();
 	}
 	
+	public void testRetryCallsListener() throws Exception{
+		final IHttpTransactionEventsListener l = mock(IHttpTransactionEventsListener.class);
+		impl.addTransactionEventsListener(l);
+		checking(new Expectations(){{
+			one(l).connectStart();
+			one(l).connected();
+			one(l).retry(req);
+		}});
+		
+		configureForRequest();
+		impl.retry(req, callback);
+		callConnected();
+	}
+	
 	public void testResponseCallsListener() throws Exception{
 		final MessageEvent ev = mock(MessageEvent.class);
 		final HttpResponse resp = mock(HttpResponse.class);
@@ -321,7 +335,6 @@ public class HttpServiceImplTest extends MockObjectTestCase {
 		
 		impl.handler.messageReceived(ctx, ev);
 	}
-	
 	
 	public void testRequestAlreadyConnectedCallsListener() throws Exception{
 		final IHttpTransactionEventsListener l = mock(IHttpTransactionEventsListener.class);

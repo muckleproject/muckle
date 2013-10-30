@@ -17,6 +17,7 @@ package test.org.sh.muckle.runtime.js;
 */
 
 
+import org.jboss.netty.handler.codec.http.DefaultHttpRequest;
 import org.jboss.netty.handler.codec.http.HttpHeaders;
 import org.jboss.netty.handler.codec.http.HttpMethod;
 import org.jboss.netty.handler.codec.http.HttpRequest;
@@ -121,6 +122,11 @@ public class RequestWrapperTest extends ScriptTestCase {
 	
 	public void testPutNotPresent(){
 		wrapper.put("NOT_THERE", null, null);
+	}
+	
+	public void testConstructWithRequest(){
+		wrapper = new RequestWrapper(new DefaultHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.DELETE, "/"));
+		assertTrue(HttpMethod.DELETE == wrapper.getRequestDescriptor().getRequest().getMethod());
 	}
 	
 

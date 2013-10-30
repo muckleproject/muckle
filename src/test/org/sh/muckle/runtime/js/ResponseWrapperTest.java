@@ -248,7 +248,7 @@ public class ResponseWrapperTest extends ScriptTestCase {
 		super.setUp();
 		mocker = new Mockery();
 		resp = mocker.mock(HttpResponse.class);
-		wrapper = new ResponseWrapper();
+		wrapper = new ResponseWrapper(null);
 		wrapper.setResponse(resp);
 		addToScope(wrapper, "resp");
 	}

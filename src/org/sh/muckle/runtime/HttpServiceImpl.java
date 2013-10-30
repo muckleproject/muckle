@@ -52,6 +52,7 @@ public class HttpServiceImpl extends ClientBootstrap implements ChannelPipelineF
 	IHttpConnectionInfo connectionInfo;
 	
 	ArrayList<IHttpTransactionEventsListener> transactionEventsListeners;
+	boolean isRetry = false;
 
 	public HttpServiceImpl(ChannelFactory channelFactory, IHttpConnectionInfo connectionInfo, int connectTimeoutMillis) {
 		super(channelFactory);
@@ -98,10 +99,21 @@ public class HttpServiceImpl extends ClientBootstrap implements ChannelPipelineF
 	}
 
 	public void retry(HttpRequest req, IHttpServiceCallback callback) {
-	    request(req, callback);
+	    request(req, callback, true);
 	}
 
 	public void request(HttpRequest req, IHttpServiceCallback callback) {
+	    request(req, callback, false);
+	}
+
+	public void addTransactionEventsListener(IHttpTransactionEventsListener listener) {
+		transactionEventsListeners.add(listener);
+	}
+	
+	//---- end IHttpService methods ---------
+
+	void request(HttpRequest req, IHttpServiceCallback callback, boolean retry) {
+		isRetry = retry;
 	    this.req = req;
         this.callback = callback;
 
@@ -121,12 +133,6 @@ public class HttpServiceImpl extends ClientBootstrap implements ChannelPipelineF
 		}
 	}
 
-	public void addTransactionEventsListener(IHttpTransactionEventsListener listener) {
-		transactionEventsListeners.add(listener);
-	}
-	
-	//---- end IHttpService methods ---------
-	
 	void setUriIfNecessary(HttpRequest req){
 	    if(connectionInfo.isProxied()){
 	    	String uri = req.getUri();
@@ -175,7 +181,12 @@ public class HttpServiceImpl extends ClientBootstrap implements ChannelPipelineF
 		int len = transactionEventsListeners.size();
 		if(len > 0){
 			for(int i=0; i<len; i++){
-				transactionEventsListeners.get(i).sendStart(request);
+				if(!isRetry){
+					transactionEventsListeners.get(i).sendStart(request);
+				}
+				else {
+					transactionEventsListeners.get(i).retry(request);
+				}
 			}
 		}
 	}

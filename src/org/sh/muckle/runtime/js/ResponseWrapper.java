@@ -34,6 +34,10 @@ public class ResponseWrapper extends AbstractReadOnlyScriptable {
 	
 	HttpResponse resp;
 	
+	public ResponseWrapper(HttpResponse response) {
+		setResponse(response);
+	}
+
 	public void setResponse(HttpResponse resp) {
 		this.resp = resp;
 	}

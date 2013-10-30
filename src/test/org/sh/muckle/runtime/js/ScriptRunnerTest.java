@@ -329,8 +329,6 @@ public class ScriptRunnerTest extends MockObjectTestCase {
 	}
 	
 	IHttpRunHandler buildFor(String script, IParamsJsonSource source) throws Exception {
-		IHttpRunHandler runner = null;
-		
 		File f = helper.createFile(testRoot, "test", ".js");
 		FileWriter fw = new FileWriter(f);
 		
@@ -341,9 +339,7 @@ public class ScriptRunnerTest extends MockObjectTestCase {
 			fw.close();
 		}
 		
-		runner = new ScriptRunner(f, cache, new RuntimeLogger(f.getAbsolutePath(), logger), source);
-		
-		return runner;
+		return new ScriptRunner(f, cache, new RuntimeLogger(f.getAbsolutePath(), logger), source);
 	}
 	
 	protected void setUp() throws Exception {

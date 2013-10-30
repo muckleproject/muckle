@@ -43,11 +43,11 @@ public class ScriptRunner extends BaseScriptRunner implements IHttpRunHandler, I
 	
 	public ScriptRunner(File script, ScriptCache cache, RuntimeLogger logger, IParamsJsonSource source) throws Exception {
 		super(script, cache, logger);
-		responseWrapper = new ResponseWrapper();
+		responseWrapper = new ResponseWrapper(null);
 		errorWrapper = new HttpErrorWrapper();
 		delayCalculator = new DelayCalculator();
 		
-		addRuntimeObjects(scope, script.getParentFile(), cache, source);
+		addClientRuntimeObjects(scope, script.getParentFile(), cache, source);
 		initScript(script, cache);
 		
 		if(nextRequest == null){
@@ -147,7 +147,7 @@ public class ScriptRunner extends BaseScriptRunner implements IHttpRunHandler, I
 	
 	//------------------ end IHandlerFunctionsStorage ----------
 	
-	void addRuntimeObjects(Scriptable scope, File scriptDir, ScriptCache cache, IParamsJsonSource source) throws Exception {
+	void addClientRuntimeObjects(Scriptable scope, File scriptDir, ScriptCache cache, IParamsJsonSource source) throws Exception {
 		scope.put(RequestWrapperConstructor.NAME, scope, new RequestWrapperConstructor());
 		scope.put("HttpErrorAction", scope, HttpErrorAction.STATIC);
 		Object params = source != null ? buildParams(scope, source.getParamsJsonString()) : null;

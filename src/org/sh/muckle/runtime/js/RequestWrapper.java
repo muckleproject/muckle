@@ -45,6 +45,10 @@ public class RequestWrapper extends AbstractReadOnlyScriptable {
 	HttpRequest request;
 	Integer delay;
 	
+	public RequestWrapper(HttpRequest request){
+		this.request = request;
+	}
+	
 	public RequestWrapper(HttpMethod method, String uri){
 		request = new DefaultHttpRequest(HttpVersion.HTTP_1_1, method, uri);
 		request.setHeader(HttpHeaders.Names.USER_AGENT, DEFAULT_USER_AGENT);
