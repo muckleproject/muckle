@@ -102,6 +102,12 @@ public class TraceRunnerTest extends MockObjectTestCase {
 		assertEquals("200", flag.param);
 	}
 	
+	public void testGetResult() throws Exception {
+		TraceRunner tracer = buildFor("trace.getResult = function(resp){called(); return {}}");
+		assertTrue(tracer.executeGetResult() instanceof Scriptable);
+		assertTrue(flag.called);
+	}
+	
 	public void testError() throws Exception {
 		IHttpTransactionEventsListener tracer = buildFor("trace.onError = function(err){called(err.isConnect)}");
 		tracer.error(EHttpCommsError.Connect);
@@ -112,7 +118,7 @@ public class TraceRunnerTest extends MockObjectTestCase {
 	
 	//-------------------------------------
 	
-	IHttpTransactionEventsListener buildFor(String script) throws Exception{
+	TraceRunner buildFor(String script) throws Exception{
 		File f = helper.createFile(testRoot, "test", ".js");
 		FileWriter fw = new FileWriter(f);
 		

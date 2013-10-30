@@ -36,6 +36,7 @@ public class TraceRunner extends BaseScriptRunner implements IHttpTransactionEve
 	Callable onRetry;
 	Callable onReceieve;
 	Callable onError;
+	Callable getResult;
 
 	public TraceRunner(File script, ScriptCache cache, ILogger logger) throws Exception {
 		super(script, cache, logger);
@@ -122,8 +123,22 @@ public class TraceRunner extends BaseScriptRunner implements IHttpTransactionEve
 		return onError;
 	}
 	
-	//--------- end ITraceFunctionStorage --------------------
+	public void setResult(Callable function) {
+		getResult = function;
+	}
 
+	public Callable getResult() {
+		return getResult;
+	}
+	
+	//--------- end ITraceFunctionStorage --------------------
+	
+	public Object executeGetResult() {
+		return runFunction(getResult(), new Object[] {});
+	}
+
+	//---------------------------------------------------------
+	
 	void addTraceRuntimeObjects(Scriptable scope, File parentFile, ScriptCache cache) {
 		scope.put("trace", scope, new TraceObject(this));
 	}
@@ -138,5 +153,6 @@ public class TraceRunner extends BaseScriptRunner implements IHttpTransactionEve
 		}
 		else {return null;}
 	}
+
 
 }

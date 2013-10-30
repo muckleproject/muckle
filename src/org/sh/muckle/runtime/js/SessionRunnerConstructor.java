@@ -90,7 +90,7 @@ public class SessionRunnerConstructor extends AbstractObjectConstructor {
 		SummaryBuilder summaryProvider;
 		DataEventBuilder dataEventProvider;
 		
-		ArrayList<TraceRunner> tracers = new ArrayList<>();
+		ArrayList<TraceRunnerWrapper> tracers = new ArrayList<>();
 		int tracerIndex;
 		
 		Callable statusListener;
@@ -166,8 +166,14 @@ public class SessionRunnerConstructor extends AbstractObjectConstructor {
 		public void addListeneners(IHttpService service) {
 			// add any trace listeners
 			if(tracerIndex < tracers.size()){
-				service.addTransactionEventsListener(tracers.get(tracerIndex++));
+				try {
+					service.addTransactionEventsListener(tracers.get(tracerIndex++).buildTraceRunner(scriptCache, errorLogger));
+				} 
+				catch (Exception e) {
+					throw new RuntimeException(e);
+				}
 			}
+			
 			// add timing listeners
 			for(int i=0; i<listenerFactories.size(); i++){
 				listenerFactories.get(i).addListeneners(service);
@@ -207,6 +213,10 @@ public class SessionRunnerConstructor extends AbstractObjectConstructor {
 						
 						for(int i=0; i<listenerFactories.size(); i++){
 							listenerFactories.get(i).completed(ctx, scope, status);
+						}
+						
+						for(int i=0; i<tracers.size(); i++){
+							tracers.get(i).updateTraceProperty(ctx, scope);
 						}
 						
 						List<ErrorItem> errors = new ErrorSummariser().summarise(status);
@@ -340,15 +350,16 @@ public class SessionRunnerConstructor extends AbstractObjectConstructor {
 
 		class AddTracerMethod implements Callable {
 			public Object call(Context ctx, Scriptable scope, Scriptable thisObj, Object[] args) {
+				TraceRunnerWrapper wrapper = null;
 				File scriptPath = resolveScriptToFile(Context.toString(args[0]));
-				new RuntimeLogger(scriptPath.getName(), errorLogger);
-				try {
-					tracers.add(new TraceRunner(scriptPath, scriptCache, errorLogger));
-				} 
-				catch (Exception e) {
-					throw new RuntimeException(e);
+				if(scriptPath.isFile()){
+					wrapper = new TraceRunnerWrapper(scriptPath);
+					tracers.add(wrapper);
 				}
-				return null;
+				else {
+					throw new RuntimeException("File not found - " + scriptPath.getAbsolutePath());
+				}
+				return wrapper;
 			}
 		}
 		

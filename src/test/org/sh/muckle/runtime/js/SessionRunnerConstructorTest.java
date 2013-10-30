@@ -144,11 +144,10 @@ public class SessionRunnerConstructorTest extends ScriptTestCase {
 		assertEquals(1, errors.getIds().length);
 	}
 	
-	public void testTraceScript() throws Exception {
+	public void testEmptyTraceScript() throws Exception {
 		createConnectScript();
-		createTraceScript();
-		Scriptable errors = (Scriptable)runScript("var r = new TestRunner('host'); var tr = r.addTracer('tracer.js'); r.run(10,100,'connect.js'); r.errors");
-		assertEquals(1, errors.getIds().length);
+		createEmptyTraceScript();
+		assertNull(runScript("var r = new TestRunner('host'); var tr = r.addTracer('tracer.js'); r.run(10,100,'connect.js'); tr.trace"));
 	}
 	
 	public void testRunWithSummary() throws Exception {
@@ -277,7 +276,7 @@ public class SessionRunnerConstructorTest extends ScriptTestCase {
 		return s;
 	}
 	
-	File createTraceScript() throws Exception{
+	File createEmptyTraceScript() throws Exception{
 		File s = helper.createFile(testRoot, "tracer", ".js");
 		FileWriter fw = new FileWriter(s);
 		fw.close();
