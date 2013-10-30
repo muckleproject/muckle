@@ -27,14 +27,15 @@ import org.mozilla.javascript.Script;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.json.JsonParser;
 import org.mozilla.javascript.json.JsonParser.ParseException;
+import org.sh.muckle.ILogger;
 import org.sh.muckle.jsobjectloaderservice.ClientScriptLoaderService;
 
 public class BaseScriptRunner  {
 	
 	Scriptable scope;
-	RuntimeLogger logger;
+	ILogger logger;
 	
-	public BaseScriptRunner(File script, ScriptCache cache, RuntimeLogger logger) throws Exception {
+	public BaseScriptRunner(File script, ScriptCache cache, ILogger logger) throws Exception {
 		this.logger = logger;
 		scope = buildScope(cache);
 		addRuntimeObjects(scope, script.getParentFile(), cache);

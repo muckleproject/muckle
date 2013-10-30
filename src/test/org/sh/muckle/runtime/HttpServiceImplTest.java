@@ -360,6 +360,37 @@ public class HttpServiceImplTest extends MockObjectTestCase {
 		impl.request(req, callback);
 	}
 	
+	
+	public void testErrorCallsListener() throws Exception{
+		final IHttpTransactionEventsListener l = mock(IHttpTransactionEventsListener.class);
+		impl.addTransactionEventsListener(l);
+		
+		checking(new Expectations(){{
+			one(l).connectStart();
+		}});
+
+		configureForRequest();
+		impl.request(req, callback);
+		
+		checking(new Expectations(){{
+			one(callback).error(EHttpCommsError.Connect);
+			one(l).error(with(EHttpCommsError.Connect));
+		}});
+		impl.handler.exceptionCaught(ctx, new ExceptionEvent() {
+			public ChannelFuture getFuture() {
+				return null;
+			}
+			
+			public Channel getChannel() {
+				return null;
+			}
+			
+			public Throwable getCause() {
+				return new RuntimeException();
+			}
+		});
+	}
+	
 	//-------------------------------------------------
 	
 	protected void setUp() throws Exception {

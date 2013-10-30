@@ -26,6 +26,7 @@ public class TraceObject extends AbstractReadOnlyScriptable {
 	final static String ON_SEND = "onSend";
 	final static String ON_RETRY = "onRetry";
 	final static String ON_RECEIVE = "onReceive";
+	final static String ON_ERROR = "onError";
 	
 	ITraceFunctionStorage storage;
 	
@@ -49,6 +50,9 @@ public class TraceObject extends AbstractReadOnlyScriptable {
 		else if(ON_CONNECT_START.equals(name)){
 			storage.setConnectStart((Callable) value);
 		}
+		else if(ON_ERROR.equals(name)){
+			storage.setError((Callable) value);
+		}
 	}
 
 	public Object get(String name, Scriptable scope) {
@@ -67,6 +71,9 @@ public class TraceObject extends AbstractReadOnlyScriptable {
 		}
 		else if(ON_CONNECT_START.equals(name)){
 			value = storage.getConnectStart();
+		}
+		else if(ON_ERROR.equals(name)){
+			value = storage.getError();
 		}
 		return value;
 	}

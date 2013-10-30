@@ -85,4 +85,7 @@ public class HttpTransactionEventTimingAdapter implements IHttpTransactionEvents
 		}
 	}
 
+	public void error(EHttpCommsError error) {
+	}
+
 }

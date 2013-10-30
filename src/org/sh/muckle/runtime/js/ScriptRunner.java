@@ -26,6 +26,7 @@ import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ContextAction;
 import org.mozilla.javascript.ContextFactory;
 import org.mozilla.javascript.Scriptable;
+import org.sh.muckle.ILogger;
 import org.sh.muckle.runtime.EHttpCommsError;
 import org.sh.muckle.runtime.EHttpErrorAction;
 import org.sh.muckle.runtime.HttpRequestDescriptor;
@@ -41,7 +42,7 @@ public class ScriptRunner extends BaseScriptRunner implements IHttpRunHandler, I
 	ResponseWrapper responseWrapper;
 	HttpErrorWrapper errorWrapper;
 	
-	public ScriptRunner(File script, ScriptCache cache, RuntimeLogger logger, IParamsJsonSource source) throws Exception {
+	public ScriptRunner(File script, ScriptCache cache, ILogger logger, IParamsJsonSource source) throws Exception {
 		super(script, cache, logger);
 		responseWrapper = new ResponseWrapper(null);
 		errorWrapper = new HttpErrorWrapper();
@@ -51,8 +52,7 @@ public class ScriptRunner extends BaseScriptRunner implements IHttpRunHandler, I
 		initScript(script, cache);
 		
 		if(nextRequest == null){
-			logger.nextRequestMissing();
-			nextRequest = new NoNextRequest();
+			throw new RuntimeException("Session object property \"" + SessionObject.ON_NEXT_REQUEST + "\" not set!");
 		}
 	}
 

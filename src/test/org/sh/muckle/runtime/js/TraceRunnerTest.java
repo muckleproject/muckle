@@ -27,8 +27,8 @@ import org.mozilla.javascript.Callable;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Scriptable;
 import org.sh.muckle.ILogger;
+import org.sh.muckle.runtime.EHttpCommsError;
 import org.sh.muckle.runtime.IHttpTransactionEventsListener;
-import org.sh.muckle.runtime.js.RuntimeLogger;
 import org.sh.muckle.runtime.js.ScriptCache;
 import org.sh.muckle.runtime.js.TraceRunner;
 
@@ -102,6 +102,13 @@ public class TraceRunnerTest extends MockObjectTestCase {
 		assertEquals("200", flag.param);
 	}
 	
+	public void testError() throws Exception {
+		IHttpTransactionEventsListener tracer = buildFor("trace.onError = function(err){called(err.isConnect)}");
+		tracer.error(EHttpCommsError.Connect);
+		assertTrue(flag.called);
+		assertEquals("true", flag.param);
+	}
+	
 	
 	//-------------------------------------
 	
@@ -116,7 +123,7 @@ public class TraceRunnerTest extends MockObjectTestCase {
 			fw.close();
 		}
 		
-		return new TestTraceRunner(f, cache, new RuntimeLogger(f.getAbsolutePath(), logger));
+		return new TestTraceRunner(f, cache, logger);
 	}
 	
 	protected void setUp() throws Exception {
@@ -148,7 +155,7 @@ public class TraceRunnerTest extends MockObjectTestCase {
 	
 	class TestTraceRunner extends TraceRunner {
 
-		public TestTraceRunner(File script, ScriptCache cache, RuntimeLogger logger) throws Exception {
+		public TestTraceRunner(File script, ScriptCache cache, ILogger logger) throws Exception {
 			super(script, cache, logger);
 		}
 		

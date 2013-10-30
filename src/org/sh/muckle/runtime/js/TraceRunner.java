@@ -24,6 +24,8 @@ import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ContextAction;
 import org.mozilla.javascript.ContextFactory;
 import org.mozilla.javascript.Scriptable;
+import org.sh.muckle.ILogger;
+import org.sh.muckle.runtime.EHttpCommsError;
 import org.sh.muckle.runtime.IHttpTransactionEventsListener;
 
 public class TraceRunner extends BaseScriptRunner implements IHttpTransactionEventsListener, ITraceFunctionStorage {
@@ -33,8 +35,9 @@ public class TraceRunner extends BaseScriptRunner implements IHttpTransactionEve
 	Callable onSend;
 	Callable onRetry;
 	Callable onReceieve;
+	Callable onError;
 
-	public TraceRunner(File script, ScriptCache cache, RuntimeLogger logger) throws Exception {
+	public TraceRunner(File script, ScriptCache cache, ILogger logger) throws Exception {
 		super(script, cache, logger);
 		
 		addTraceRuntimeObjects(scope, script.getParentFile(), cache);
@@ -61,6 +64,10 @@ public class TraceRunner extends BaseScriptRunner implements IHttpTransactionEve
 
 	public void responseReceived(HttpResponse response) {
 		runFunction(getReceive(), new Object[] {new ResponseWrapper(response)});
+	}
+	
+	public void error(EHttpCommsError error) {
+		runFunction(getError(), new Object[] {new HttpErrorWrapper().setError(error)});
 	}
 	
 	//----- end IHttpTransactionEventsListener methods -----------
@@ -107,6 +114,14 @@ public class TraceRunner extends BaseScriptRunner implements IHttpTransactionEve
 		return onReceieve;
 	}
 	
+	public void setError(Callable function) {
+		onError = function;
+	}
+
+	public Callable getError() {
+		return onError;
+	}
+	
 	//--------- end ITraceFunctionStorage --------------------
 
 	void addTraceRuntimeObjects(Scriptable scope, File parentFile, ScriptCache cache) {
@@ -123,4 +138,5 @@ public class TraceRunner extends BaseScriptRunner implements IHttpTransactionEve
 		}
 		else {return null;}
 	}
+
 }

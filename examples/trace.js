@@ -1,13 +1,14 @@
 var log = [];
 
-trace.onRequest = function (req){
+trace.onSend = function (req){
 	log.push({request: {uri: req.uri}});
 };
 
-trace.onResponse = function (resp){
+trace.onReceive = function (resp){
 	var current = log.pop();
 	current.response = {status: resp.status};
 	log.push(current);
+println(JSON.stringify(current));
 };
 
 trace.onError = function (message){

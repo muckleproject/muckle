@@ -26,4 +26,5 @@ public interface IHttpTransactionEventsListener {
 	public void sendStart(HttpRequest request);
 	public void retry(HttpRequest request);
 	public void responseReceived(HttpResponse response);
+	public void error(EHttpCommsError error);
 }

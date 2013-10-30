@@ -90,6 +90,9 @@ public class SessionRunnerConstructor extends AbstractObjectConstructor {
 		SummaryBuilder summaryProvider;
 		DataEventBuilder dataEventProvider;
 		
+		ArrayList<TraceRunner> tracers = new ArrayList<>();
+		int tracerIndex;
+		
 		Callable statusListener;
 		long timeout;
 		int connectTimeoutMillis = DEFAULT_CONNECTION_TIMEOUT;
@@ -102,7 +105,7 @@ public class SessionRunnerConstructor extends AbstractObjectConstructor {
 		}
 
 		public Object get(String name, Scriptable start) {
-			Object value = null;
+			Object value = NOT_FOUND;
 			
 			if("run".equals(name)){
 				value = new RunMethod();
@@ -124,6 +127,9 @@ public class SessionRunnerConstructor extends AbstractObjectConstructor {
 			}
 			else if("errors".equals(name)){
 				value = errors;
+			}
+			else if("addTracer".equals(name)){
+				value = new AddTracerMethod();
 			}
 			
 			return value;
@@ -158,9 +164,21 @@ public class SessionRunnerConstructor extends AbstractObjectConstructor {
 		//----- end IHttpConnectionInfo methods -------------
 
 		public void addListeneners(IHttpService service) {
+			// add any trace listeners
+			if(tracerIndex < tracers.size()){
+				service.addTransactionEventsListener(tracers.get(tracerIndex++));
+			}
+			// add timing listeners
 			for(int i=0; i<listenerFactories.size(); i++){
 				listenerFactories.get(i).addListeneners(service);
 			}
+		}
+		
+		//----------------------------------------------------
+		
+		File resolveScriptToFile(String scriptName){
+			File f = new File(scriptName);
+			return f.isFile() ? f : new File(scriptRoot, scriptName);
 		}
 		
 		//----------------------------------------------------
@@ -173,18 +191,17 @@ public class SessionRunnerConstructor extends AbstractObjectConstructor {
 					double startupRate = Context.toNumber(args[1]);
 					final File scriptPath = resolveScriptToFile(Context.toString(args[2]));
 					
-					final RuntimeLogger logger = new RuntimeLogger(scriptPath.getName(), errorLogger);
 					final IParamsJsonSource jsonSource = getJsonSource(ctx, scope, args, count);
 					final IHttpSequenceStatusChecker checker = getChecker(ctx, scope);
 					final IHttpRunHandlerFactory factory = new IHttpRunHandlerFactory(){
 						public IHttpRunHandler buildHandler() throws Exception  {
-							return new ScriptRunner(scriptPath, scriptCache, logger, jsonSource);
+							return new ScriptRunner(scriptPath, scriptCache, errorLogger, jsonSource);
 						}};
 					
 					SessionsRunner runner = new SessionsRunner(connectTimeoutMillis);
 					
 					try {
-						
+						tracerIndex = 0;
 						IHttpSessionSequenceStatus[] status = runner.run(count, startupRate, TestRunner.this,
 								factory, TestRunner.this, checker);
 						
@@ -224,11 +241,6 @@ public class SessionRunnerConstructor extends AbstractObjectConstructor {
 				else {
 					return NullJSONSource.STATIC;
 				}
-			}
-			
-			File resolveScriptToFile(String scriptName){
-				File f = new File(scriptName);
-				return f.isFile() ? f : new File(scriptRoot, scriptName);
 			}
 			
 			void setErrors(Context ctx, Scriptable scope, List<ErrorItem> errorList) {
@@ -325,6 +337,22 @@ public class SessionRunnerConstructor extends AbstractObjectConstructor {
 
 		//----------------------------------------------------
 
+
+		class AddTracerMethod implements Callable {
+			public Object call(Context ctx, Scriptable scope, Scriptable thisObj, Object[] args) {
+				File scriptPath = resolveScriptToFile(Context.toString(args[0]));
+				new RuntimeLogger(scriptPath.getName(), errorLogger);
+				try {
+					tracers.add(new TraceRunner(scriptPath, scriptCache, errorLogger));
+				} 
+				catch (Exception e) {
+					throw new RuntimeException(e);
+				}
+				return null;
+			}
+		}
+		
+		//----------------------------------------------------
 		class SuccessCounter extends AbstractCompletedFinder<Object> {
 
 			public int count(IHttpSessionSequenceStatus[] results){

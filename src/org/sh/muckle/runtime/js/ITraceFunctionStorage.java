@@ -33,5 +33,8 @@ public interface ITraceFunctionStorage {
 
 	public void setReceive(Callable function);
 	public Callable getReceive();
+
+	public void setError(Callable function);
+	public Callable getError();
 	
 }

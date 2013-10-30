@@ -20,12 +20,6 @@ package test.org.sh.muckle.runtime.js;
 import java.io.File;
 import java.io.FileWriter;
 
-
-
-
-
-
-
 import org.jboss.netty.handler.codec.http.DefaultHttpResponse;
 import org.jboss.netty.handler.codec.http.HttpMethod;
 import org.jboss.netty.handler.codec.http.HttpResponse;
@@ -43,7 +37,6 @@ import org.sh.muckle.runtime.EHttpErrorAction;
 import org.sh.muckle.runtime.HttpRequestDescriptor;
 import org.sh.muckle.runtime.IHttpRunHandler;
 import org.sh.muckle.runtime.js.IParamsJsonSource;
-import org.sh.muckle.runtime.js.RuntimeLogger;
 import org.sh.muckle.runtime.js.ScriptCache;
 import org.sh.muckle.runtime.js.ScriptRunner;
 
@@ -65,18 +58,15 @@ public class ScriptRunnerTest extends MockObjectTestCase {
 	final static String STATUS_CHECKER = "session.onHandleResponse = handleResponse; function handleResponse(resp){resp.status;}\n";
 	
 	public void testNextRequestNotDefined() throws Exception {
-		checking(new Expectations(){{
-			one(logger).warning(with(any(String.class)));
-		}});
-		IHttpRunHandler runner = buildFor("");
-		assertNull(runner.nextRequest());
+		try {
+			buildFor("");
+			fail();
+		}
+		catch(RuntimeException e){}
 	}
 	
 	public void testNextRequestIsPrimitive() throws Exception {
-		checking(new Expectations(){{
-			one(logger).warning(with(any(String.class)));
-		}});
-		IHttpRunHandler runner = buildFor("session.onNextRequest = 1;");
+		IHttpRunHandler runner = buildFor("session.onNextRequest = function(){}; session.onNextRequest = 1;");
 		assertNull(runner.nextRequest());
 	}
 	
@@ -128,35 +118,29 @@ public class ScriptRunnerTest extends MockObjectTestCase {
 	public void testHandleErrorNotDefined() throws Exception{
 		checking(new Expectations(){{
 			one(logger).warning(with(any(String.class)));
-			one(logger).warning(with(any(String.class)));
 		}});
-		IHttpRunHandler runner = buildFor("");
+		IHttpRunHandler runner = buildFor("session.onNextRequest = function(){}; ");
 		assertEquals(EHttpErrorAction.Abort, runner.handleError(EHttpCommsError.Connect));
 	}
 	
 	public void testHandleErrorDefinedButNoReturn() throws Exception{
 		checking(new Expectations(){{
 			one(logger).warning(with(any(String.class)));
-			one(logger).warning(with(any(String.class)));
 		}});
-		IHttpRunHandler runner = buildFor("function handleError(error){}");
+		IHttpRunHandler runner = buildFor("session.onNextRequest = function(){}; function handleError(error){}");
 		assertEquals(EHttpErrorAction.Abort, runner.handleError(EHttpCommsError.Connect));
 	}
 	
 	public void testHandleErrorDefined() throws Exception{
-		checking(new Expectations(){{
-			one(logger).warning(with(any(String.class)));
-		}});
-		IHttpRunHandler runner = buildFor("session.onHandleError = handleError; function handleError(error){return HttpErrorAction.RETRY;}");
+		IHttpRunHandler runner = buildFor("session.onNextRequest = function(){}; session.onHandleError = handleError; function handleError(error){return HttpErrorAction.RETRY;}");
 		assertEquals(EHttpErrorAction.Retry, runner.handleError(EHttpCommsError.Connect));
 	}
 	
 	public void testHandleErrorParamSet() throws Exception{
 		checking(new Expectations(){{
 			one(logger).warning(with(any(String.class)));
-			one(logger).warning(with(any(String.class)));
 		}});
-		IHttpRunHandler runner = buildFor("function handleError(error){if(error.isConnect){return HttpErrorAction.ABORT;}}");
+		IHttpRunHandler runner = buildFor("session.onNextRequest = function(){}; function handleError(error){if(error.isConnect){return HttpErrorAction.ABORT;}}");
 		assertEquals(EHttpErrorAction.Abort, runner.handleError(EHttpCommsError.Connect));
 	}
 	
@@ -339,7 +323,7 @@ public class ScriptRunnerTest extends MockObjectTestCase {
 			fw.close();
 		}
 		
-		return new ScriptRunner(f, cache, new RuntimeLogger(f.getAbsolutePath(), logger), source);
+		return new ScriptRunner(f, cache, logger, source);
 	}
 	
 	protected void setUp() throws Exception {

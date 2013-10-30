@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileWriter;
 
 import org.mozilla.javascript.Callable;
+import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Scriptable;
 import org.sh.muckle.ILogger;
 import org.sh.muckle.runtime.IHttpConnectionInfo;
@@ -75,7 +76,7 @@ public class SessionRunnerConstructorTest extends ScriptTestCase {
 	}
 	
 	public void testInvalidProperyName(){
-		assertNull(runScript("var r = new TestRunner('host'); r.NOT_THERE"));
+		assertEquals(Context.getUndefinedValue(), runScript("var r = new TestRunner('host'); r.NOT_THERE"));
 	}
 	
 	public void testRunIsMethod(){
@@ -140,6 +141,13 @@ public class SessionRunnerConstructorTest extends ScriptTestCase {
 	public void testErrorsNotEmpty() throws Exception {
 		createConnectScript();
 		Scriptable errors = (Scriptable)runScript("var r = new TestRunner('host'); r.run(10,100,'connect.js'); r.errors");
+		assertEquals(1, errors.getIds().length);
+	}
+	
+	public void testTraceScript() throws Exception {
+		createConnectScript();
+		createTraceScript();
+		Scriptable errors = (Scriptable)runScript("var r = new TestRunner('host'); var tr = r.addTracer('tracer.js'); r.run(10,100,'connect.js'); r.errors");
 		assertEquals(1, errors.getIds().length);
 	}
 	
@@ -265,6 +273,13 @@ public class SessionRunnerConstructorTest extends ScriptTestCase {
 		FileWriter fw = new FileWriter(s);
 		fw.write("session.onNextRequest = function (){return new HttpRequest();}\n");
 		fw.write("session.onHandleError = function (error){return HttpErrorAction.ABORT;}");
+		fw.close();
+		return s;
+	}
+	
+	File createTraceScript() throws Exception{
+		File s = helper.createFile(testRoot, "tracer", ".js");
+		FileWriter fw = new FileWriter(s);
 		fw.close();
 		return s;
 	}

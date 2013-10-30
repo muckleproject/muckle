@@ -75,6 +75,7 @@ public class HttpTransactionEventTimingAdapterTest extends MockObjectTestCase {
 		adapter.sendStart(null);
 		adapter.retry(null);
 		adapter.responseReceived(null);
+		adapter.error(null);
 	}
 	
 	protected void setUp() throws Exception {

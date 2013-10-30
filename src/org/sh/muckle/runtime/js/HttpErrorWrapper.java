@@ -47,9 +47,10 @@ public class HttpErrorWrapper extends AbstractReadOnlyScriptable implements ICom
 		return "HttpError";
 	}
 
-	public void setError(EHttpCommsError error) {
+	public HttpErrorWrapper setError(EHttpCommsError error) {
 		this.error = error;
 		error.accept(this);
+		return this;
 	}
 	
 	//--------------------------

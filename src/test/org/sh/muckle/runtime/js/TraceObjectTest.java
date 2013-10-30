@@ -81,6 +81,16 @@ public class TraceObjectTest extends MockObjectTestCase {
 		assertTrue(f == to.get("onReceive", null));
 	}
 	
+	public void testGetSetOnError(){
+		final Callable f = mock(Callable.class);
+		checking(new Expectations(){{
+			one(storage).setError(f);
+			one(storage).getError(); will(returnValue(f));
+		}});
+		to.put("onError", null, f);
+		assertTrue(f == to.get("onError", null));
+	}
+	
 	public void testGetSetNotFount(){
 		to.put("NOT_PROPERTY", null, null);
 		assertEquals(Scriptable.NOT_FOUND, to.get("NOT_PROPERTY", null));

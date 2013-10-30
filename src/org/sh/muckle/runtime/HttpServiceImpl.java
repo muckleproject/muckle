@@ -199,6 +199,15 @@ public class HttpServiceImpl extends ClientBootstrap implements ChannelPipelineF
 			}
 		}
 	}
+
+	void error(EHttpCommsError error){
+		int len = transactionEventsListeners.size();
+		if(len > 0){
+			for(int i=0; i<len; i++){
+				transactionEventsListeners.get(i).error(error);
+			}
+		}
+	}
 	
 	void closeChannel(){
 		if(currentChannel != null){
@@ -213,6 +222,7 @@ public class HttpServiceImpl extends ClientBootstrap implements ChannelPipelineF
 		
 		public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e){
 			closeChannel();
+			error(EHttpCommsError.Connect);
 			callback.error(EHttpCommsError.Connect);
 		}
 		
