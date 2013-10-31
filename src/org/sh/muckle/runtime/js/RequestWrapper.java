@@ -39,7 +39,9 @@ public class RequestWrapper extends AbstractReadOnlyScriptable {
 	final static String URI = "uri";
 	final static String DELAY = "delay";
 	final static String SET_HEADER = "setHeader";
+	final static String GET_HEADERS = "getHeaders";
 	final static String SET_CONTENT = "setContent";
+	final static String GET_CONTENT = "getContent";
 	final static String METHOD = "method";
 	
 	HttpRequest request;
@@ -83,6 +85,12 @@ public class RequestWrapper extends AbstractReadOnlyScriptable {
 		}
 		else if(DELAY.equals(name)){
 			value = delay;
+		}
+		else if(GET_HEADERS.equals(name)){
+			value = new HeadersMethod(request);
+		}
+		else if(GET_CONTENT.equals(name)){
+			value = new ContentMethod(request);
 		}
 		
 		return value;

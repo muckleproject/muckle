@@ -17,17 +17,12 @@ limitations under the License.
 */
 
 
-import java.nio.charset.Charset;
-import java.nio.charset.UnsupportedCharsetException;
-import java.util.List;
-import java.util.Map;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.handler.codec.http.HttpResponse;
 import org.mozilla.javascript.Callable;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Scriptable;
-import org.mozilla.javascript.WrappedException;
 import org.sh.muckle.jssupport.AbstractReadOnlyScriptable;
 
 public class ResponseWrapper extends AbstractReadOnlyScriptable {
@@ -49,13 +44,13 @@ public class ResponseWrapper extends AbstractReadOnlyScriptable {
 			value = resp.getStatus().getCode();
 		}
 		else if("getContent".equals(name)){
-			value = new ContentMethod();
+			value = new ContentMethod(resp);
 		}
 		else if("getHeader".equals(name)){
 			value = new HeaderMethod();
 		}
 		else if("getHeaders".equals(name)){
-			value = new HeadersMethod();
+			value = new HeadersMethod(resp);
 		}
 		else if("getContentBytes".equals(name)){
 			value = new ContentBytesMethod();
@@ -70,25 +65,6 @@ public class ResponseWrapper extends AbstractReadOnlyScriptable {
 	
 	//---------------------------------------------------------------
 	
-	class ContentMethod implements Callable {
-
-		public Object call(Context ctx, Scriptable scope, Scriptable thisObject, Object[] args) {
-			String charset = "UTF-8";
-			if(args.length > 0){
-				charset = Context.toString(args[0]);
-			}
-			
-			try {
-				ChannelBuffer cb = resp.getContent();
-				return cb != null ? cb.toString(Charset.forName(charset)) : "";
-			}
-			catch(UnsupportedCharsetException e){
-				throw new WrappedException(e);
-			}
-		}
-		
-	}
-	
 	class ContentBytesMethod implements Callable {
 
 		public Object call(Context ctx, Scriptable scope, Scriptable thisObject, Object[] args) {
@@ -99,22 +75,6 @@ public class ResponseWrapper extends AbstractReadOnlyScriptable {
 				content[i] = new Integer(cb.readByte());
 			}
 			return ctx.newArray(scope, content);
-		}
-		
-	}
-	
-	class HeadersMethod implements Callable {
-
-		public Object call(Context ctx, Scriptable scope, Scriptable thisObject, Object[] args) {
-			List<Map.Entry<String, String>> headersList = resp.getHeaders();
-			Object[] headers = new Object[headersList.size()];
-			for(int i=0; i<headersList.size(); i++){
-				Scriptable nv = ctx.newObject(scope);
-				Map.Entry<String, String> entry = headersList.get(i);
-				nv.put(entry.getKey(), nv, entry.getValue());
-				headers[i] = nv;
-			}
-			return ctx.newArray(scope, headers);
 		}
 		
 	}

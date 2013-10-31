@@ -22,6 +22,7 @@ import org.jboss.netty.handler.codec.http.HttpHeaders;
 import org.jboss.netty.handler.codec.http.HttpMethod;
 import org.jboss.netty.handler.codec.http.HttpRequest;
 import org.jboss.netty.handler.codec.http.HttpVersion;
+import org.mozilla.javascript.NativeArray;
 import org.mozilla.javascript.Scriptable;
 import org.sh.muckle.runtime.HttpRequestDescriptor;
 import org.sh.muckle.runtime.js.RequestWrapper;
@@ -127,6 +128,16 @@ public class RequestWrapperTest extends ScriptTestCase {
 	public void testConstructWithRequest(){
 		wrapper = new RequestWrapper(new DefaultHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.DELETE, "/"));
 		assertTrue(HttpMethod.DELETE == wrapper.getRequestDescriptor().getRequest().getMethod());
+	}
+	
+	public void testGetHeaders(){
+		Scriptable array = (Scriptable)runScript("req.getHeaders()");
+		assertTrue(array instanceof NativeArray);
+	}
+	
+	public void testGetContent(){
+		String content = (String)runScript("req.getContent()");
+		assertEquals("", content);
 	}
 	
 

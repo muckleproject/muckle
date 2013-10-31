@@ -767,6 +767,36 @@ the Javascript "onNextRequest" function defined in the "session" object property
 	<p> 
     </td>
   </tr>
+  <tr>
+    <td>getContent([charset])</td>
+    <td>
+    Returns the contents of the HTTP request body encoded as a string. The optional charset parameter defines the encoding name
+    that was used to encode the bytes, if not supplied then this defaults to "UTF-8";
+	<p>
+	Example - get the contents from a response encoded using "utf-16".
+	<pre>
+	trace.onSend = function (req){
+	     var bodyString = req.getContent("utf-16");
+	     ...
+	</pre>
+	<p>    
+    </td>
+  </tr>
+  <tr>
+    <td>getHeaders()</td>
+    <td>
+    Returns all the headers in the HTTP request as an array of javascript objects. Each object has one property, the property "name" is the name of the header field and its "value" is the value of 
+    the header.
+    <p>
+	Example - get all the headers as an array of objects
+	<pre>
+	trace.onSend = function (req){
+	     var headersArray = req.getHeaders();
+	     ...
+	</pre>
+	<p> 
+    </td>
+  </tr>
 </table>
 <p>
 
