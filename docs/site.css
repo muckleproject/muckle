@@ -1,0 +1,30 @@
+body {
+	font-family:"arial";
+	font-size:10pt;
+}
+
+h1,h2{
+	padding-top: 30px;
+}
+
+table{
+	width:90%;
+	border-collapse:collapse;	
+}
+
+th {
+	background-color: rgb(100, 100, 100);
+	color: white;
+}
+
+th, td {
+	font-family:"arial";
+	font-size:10pt;
+	vertical-align:top;
+	border: 1px solid rgb(200, 200, 200);
+	padding: 5px;
+}
+
+pre {
+	font-size:9pt;
+}
