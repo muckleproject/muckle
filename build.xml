@@ -1,4 +1,4 @@
-<project name="muckle" default="run" basedir=".">
+<project name="muckle" default="zip" basedir=".">
 	<description>
    	A muckle load of fun.
   </description>
@@ -7,14 +7,22 @@
 	<property name="build" location="build/jarfile"/>
 	<property name="testsrc" location="src/test"/>
 	<property name="testclasses" location="build/testclasses"/>
-	<property name="dist"  location="dist"/>
+	<property name="distRoot"  location="dist"/>
 	<property name="libs"  location="libs"/>
 
 
 	<target name="init" depends="clean">
 		<!-- Create the build directory structure used by compile -->
 		<mkdir dir="${build}"/>
+		<!-- copy in build number files -->
+		<copy todir="${build}/org/sh/muckle">
+			<fileset dir="${src}/sh/muckle" includes="*.txt"/>
+		</copy>
 		<mkdir dir="${testclasses}"/>
+		<buildnumber file="${src}/sh/muckle/build.txt"/>
+		<property file="${src}/sh/muckle/build.txt"/>
+		<property name="distVersion" value="muckle_${major.number}_${minor.number}_${build.number}"/>
+		<property name="dist" value="${distRoot}/${distVersion}"/>
 	</target>
 
 	<target name="compile" depends="init"  description="compile the source " >
@@ -57,6 +65,7 @@
 	</target>
 
 	<target name="dist" depends="test" description="generate the distribution directory structure and contents" >
+		<mkdir dir="${distRoot}"/>
 		<mkdir dir="${dist}"/>
 		<!-- copy in license file -->
 		<copy todir="${dist}" file="LICENSE.md"/>
@@ -66,6 +75,10 @@
 		</copy>
 		<fixcrlf srcdir="${dist}" includes="**/*.sh"  eol="lf" eof="remove" />
 		<fixcrlf srcdir="${dist}" includes="**/*.bat" eol="crlf" />
+		<!-- copy in docs -->
+		<copy todir="${dist}/docs">
+			<fileset dir="docs" includes="*"/>
+		</copy>
 		<!-- copy in examples -->
 		<copy todir="${dist}/examples">
 			<fileset dir="examples" includes="*"/>
@@ -112,11 +125,14 @@
         <java jar="${dist}/libs/${ant.project.name}.jar" fork="true"/>
     </target>
 
+    <target name="zip" depends="run">
+    	<zip destfile="muckle.zip"  basedir="${distRoot}"/>
+    </target>
+
 	<target name="clean"  description="clean up" >
 		<!-- Delete the ${build} and ${dist} directory trees -->
 		<delete dir="${build}"/>
-		<delete dir="${dist}/libs"/>
-		<delete dir="${dist}"/>
+		<delete dir="${distRoot}"/>
 		<delete dir="${testclasses}"/>
 	</target>
 
