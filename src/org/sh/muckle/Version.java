@@ -1,5 +1,9 @@
 package org.sh.muckle;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
+
 /*
 Copyright 2013 The Muckle Project
 
@@ -18,10 +22,38 @@ limitations under the License.
 
 
 public class Version {
+	
+	final static String VERSION = loadVersion();
+	
 	public static String GetVersion(){
-		return "Muckle/0.0.1";
+		return VERSION;
 	}
+
 	public static void main(String[] args){
 		System.out.println(GetVersion());
 	}
+	
+	
+	private static String loadVersion() {
+		StringBuilder sb = new StringBuilder();
+		
+		InputStream is = Version.class.getResourceAsStream("/org/sh/muckle/build.txt");
+		Properties p = new Properties();
+		
+		try {
+			p.load(is);
+			sb.append("Muckle/");
+			sb.append(p.getProperty("major.number"));
+			sb.append(".");
+			sb.append(p.getProperty("minor.number"));
+			sb.append(".");
+			sb.append(p.getProperty("build.number"));
+		} 
+		catch (IOException e) {
+			throw new RuntimeException(e.getMessage());
+		}
+		
+		return sb.toString();
+	}
+
 }

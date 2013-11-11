@@ -27,7 +27,7 @@ import junit.framework.TestCase;
 public class VersionTest extends TestCase {
 	
 	public void testGetVersion(){
-		assertTrue(Version.GetVersion().contains("Muckle"));
+		assertTrue(Version.GetVersion().contains("Muckle/0.0"));
 	}
 
 	public void testMain(){
@@ -37,7 +37,7 @@ public class VersionTest extends TestCase {
 			System.setOut(new PrintStream(os));
 			Version.main(new String[] {});
 			System.out.flush();
-			assertTrue(os.toString().contains("Muckle"));
+			assertTrue(os.toString().contains("Muckle/0.0"));
 		}
 		finally{
 			System.setOut(old);
