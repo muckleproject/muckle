@@ -10,19 +10,34 @@ Muckle (a Scottish colloquialism that is generally accepted to mean "a great amo
 Muckle combines two great open-source Java projects "Netty" and "Mozilla Rhino" with a wee (Scottish for "small") amount of Java glue to hopefully provide something useful. 
 In keeping with the generous tradition of the projects it is built upon Muckle is itself open-source.
 
+<h1>Windows Quickstart</h1>
+
+1. Install Java version 7.<br>
+2. Download and unzip Muckle.zip.<br>
+3. Start a web server on localhost port 8080 ( or modify line 1 of runClient.js for another server and port ).<br>
+4. Change directory to "muckle_n.n.n".<br>
+5. Enter the command   "muckle examples\runClient.js examples\index_20.js".<br>
+
+
+
 <h1>How Muckle Works</h1>
-To run an HTTP load test using Muckle then you need to download Muckle, create two types of Javascript scripts, a control script and a client script and have 
-a system that supports the Java jvm that the scripts and Muckle runtime can be deployed to.
+Muckle uses two types of Javascript scripts, a control script and a client script.
+<p>
 The "control" script controls various top level parameters of an HTTP load test such as the number of HTTP sessions, how they are started up and how statistics 
-are gathered, what "client" script they should use.
+are gathered, what "client" script is used.
+<p>
 The client script controls the content of HTTP transactions required for the load test such as urls, HTTP methods, HTTP headers and HTTP body content.
 <p>
 The standard Javascript runtime provided by Mozilla Rhino is augmented by Muckle with specific functions and objects to make the creation of 
 the client and control scripts and the running of them as efficient as possible whilst providing the flexibility of using the 
-ubiquitous Javascript scripting language in their definition. 
+ubiquitous Javascript scripting language in their definition.
+<p> 
 The control script objects and functions are used to configure the Muckle test runtime in readiness for running an HTTP load test.
+<p>
 Once configured and running the Muckle test runtime uses the Netty event driven framework to do the heavy lifting associated with HTTP transactions,  
-calling the Muckle client scripts to do the test specific management of the transaction content. The overview diagram below shows a block level view of the Muckle architecture.
+calling the Muckle client scripts to do the test specific management of the transaction content. 
+<p>
+The overview diagram below shows a block level view of the Muckle architecture.
 <p>
 <img style="display: block;margin-left:auto;margin-right:auto;" src="overview.png">
 <h3 style="text-align: center">Muckle Overview</h3>
@@ -30,6 +45,7 @@ calling the Muckle client scripts to do the test specific management of the tran
 Prior to running the load test Muckle creates many instances of the client script referenced by the control script. Each of these client script (HTTP sessions) instances runs in its own Javascript context 
 independent of other sessions and the main control script.
 In this way each HTTP session of a load test has its own session state allowing Muckle to be used to load test complex state driven web applications.
+<p>
 Although the simple and efficient control of HTTP transaction execution state is the primary motive for the Muckle runtime architecture it is equally efficient to use Muckle
 to create HTTP load tests which do not need previous state for their execution such as repeated HTTP GETs of a particular resource.
 <p>
