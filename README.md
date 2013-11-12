@@ -16,7 +16,7 @@ interested in web and web service operation and performance.
 5. Enter the command   "muckle examples\runClient.js examples\index_20.js"  .<br>
 
 <h1>Documentation</h1>
-See muckle_n.n.n/docs/index.html from muckle.zip for an overview and detailed description of Muckle and its functionality.
+See <b>muckle_n.n.n/docs/index.html</b> from <b>muckle.zip</b> for an overview and detailed description of Muckle and its functionality.
 
 
 
