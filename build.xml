@@ -14,12 +14,12 @@
 	<target name="init" depends="clean">
 		<!-- Create the build directory structure used by compile -->
 		<mkdir dir="${build}"/>
-		<!-- copy in build number files -->
+		<!-- copy in version numbers file -->
 		<copy todir="${build}/org/sh/muckle">
 			<fileset dir="${src}/sh/muckle" includes="*.txt"/>
 		</copy>
 		<mkdir dir="${testclasses}"/>
-		<buildnumber file="${src}/sh/muckle/build.txt"/>
+		<!-- load version numbers -->
 		<property file="${src}/sh/muckle/build.txt"/>
 		<property name="distVersion" value="muckle_${major.number}_${minor.number}_${build.number}"/>
 		<property name="dist" value="${distRoot}/${distVersion}"/>
