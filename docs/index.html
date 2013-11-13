@@ -10,21 +10,11 @@ Muckle (a Scottish colloquialism that is generally accepted to mean "a great amo
 Muckle combines two great open-source Java projects "Netty" and "Mozilla Rhino" with a wee (Scottish for "small") amount of Java glue to hopefully provide something useful. 
 In keeping with the generous tradition of the projects it is built upon Muckle is itself open-source.
 
-<h1>Windows Quickstart</h1>
-
-1. Install Java version 7.<br>
-2. Download and unzip muckle.zip.<br>
-3. Start a web server on localhost port 8080 ( or modify line 1 of examples\runClient.js for another server and port ).<br>
-4. Change directory to "muckle_n.n.n".<br>
-5. Enter the command   "muckle examples\runClient.js examples\index_20.js".<br>
-
-
-
 <h1>How Muckle Works</h1>
 Muckle uses two types of Javascript scripts, a control script and a client script.
 <p>
-The "control" script controls various top level parameters of an HTTP load test such as the number of HTTP sessions, how they are started up and how statistics 
-are gathered, what "client" script is used.
+The "control" script controls various top level parameters of an HTTP load test such as which server to use, 
+the number of HTTP sessions, what "client" script is used for the HTTP sessions, how the sessions are started up and what statistics are gathered.
 <p>
 The client script controls the content of HTTP transactions required for the load test such as urls, HTTP methods, HTTP headers and HTTP body content.
 <p>
@@ -49,8 +39,116 @@ In this way each HTTP session of a load test has its own session state allowing 
 Although the simple and efficient control of HTTP transaction execution state is the primary motive for the Muckle runtime architecture it is equally efficient to use Muckle
 to create HTTP load tests which do not need previous state for their execution such as repeated HTTP GETs of a particular resource.
 <p>
+
+<h1>Windows Quickstart</h1>
+
+1. Install Java version 7.<br>
+2. Download and unzip muckle.zip.<br>
+3. Start a web server on localhost port 8080 ( or modify line 1 of examples\runClient.js for another server and port ).<br>
+4. Change directory to "muckle_n.n.n".<br>
+5. Enter the command   "muckle examples\runClient.js examples\index_20.js".<br>
+
+<h1>Overview of Quickstart code.</h1>
+
+In the quickstart example the muckle command script is passed two parameters, the control Javascript path and the 
+client Javascript path.
+<p>
+The control script is located in MUCKLE_INSTALL_PATH/examples/runClient.js. <br>
+The following code should be something like the distribution -
+
+<pre>
+1	var runner = new SessionRunner('localhost', 8080);
+2	var sp = runner.getSummaryProvider();
+3	runner.setStatusListener(4, function(status){println(JSON.stringify(status));});
+4
+5	var count = args.length > 2 ? args[2] : 1000;
+6	var startupRate = args.length > 3 ? args[3] : 50;
+7	runner.run(count, startupRate, args[1]);
+8
+9	println(JSON.stringify(runner.errors));
+10	println(JSON.stringify(sp.summary));
+
+</pre>
+You can see a detailed description of the objects and functions used further down this document, for now we will
+describe in general terms what is happening in the control script.
+<p>
+Line 1 - creates a new SessionRunner. This is the Javascript object that controls the execution of and data collection from an HTTP load test.<br>
+In this instance it is hardcoded to use "localhost" and port 8080 as the target HTTP server.
+<p>
+Line 2 - gets a "summary provider" for the subsequent load test runs. This Javascript object will contain a summary of the data collected
+during a run. 
+<p>
+Line 3 - sets a status listener that will run every four (4) seconds during a load test run and execute the function passed as the
+second parameter. This function will receive a "status" object that contains details of the current execution status.
+In this case the inline function "stringifies" the status object to produce some user feed back during execution.
+<p>
+Line 4 - looks for a third (args[2]) command line parameter (NB args[0] refers to this script) to define the number of clients to start, defaulting to
+1000 client sessions.
+<p>
+Line 5 - looks for a fourth command line parameter to define a startup rate in client session per second, defaulting to 50 clients per second.
+<p>
+Line 7 - starts the execution of client scripts. The run method will not return until all sessions have completed 
+in some way, but the status listener callback function supplied on line 3 will be executed to give feedback.
+The second parameter supplied on the command line (args[1]) is the name of the client script to use for each session.
+<p>
+Line 9 - prints any errors that may have occurred during the execution of the run method.
+<p>
+Line 10 - prints the summary details for those session that did not have any errors for the execution of the run.
+<p>
+&nbsp;
+<p>
+The client script is located in MUCKLE_INSTALL_PATH/examples/index_20.js. <br>
+The following code should be something like the distribution -
+
+<pre>
+1	var req = new HttpRequest();
+2	req.delay = 1000;
+3	var count = 20;
+4	var retries = 2;
+5
+6	session.onNextRequest = function (){
+7		retries = 2; 
+8		return count-- > 0 ? req : null;
+9	};
+10	
+11	session.onHandleResponse = function (resp){
+12		if(resp.status != 200){
+13			throw "Unexpected status <" + resp.status + ">";
+14		}
+15	};
+16
+17	session.onHandleError = function (error){
+18		return retries-- > 0 ? HttpErrorAction.RETRY : HttpErrorAction.ABORT;
+19	};
+</pre>
+<p>
+Line 1 - this creates an HttpRequest object that has the default values of "/" for the uri and "GET" for
+the HTTP method.
+<p>
+Line 2 - sets the delay for the request to be one second after it has been fetched by the runtime engine.
+<p>
+Line 3 - initialises a counter.
+<p>
+Line 4 - initialises the retry count for a failed request
+<p>
+Lines 6 to 9 - sets the "onNextRequest" callback function for this session. The runtime engine will call
+this function each time it needs a new request. In this instance the function resets the retry count, and 
+returns the request object created on line 1, or null to indicate that no more requests are to be made.
+<p>
+Lines 11 to 15 - sets the "onHandleResponse" callback function for this session. The runtime engine will
+call this function when the response has been received for the request supplied by a prior call to the 
+"onNextRequest" callback. In this instance the function checks that the HTTP status is 200, throwing an
+exception if not. The throw will have the effect of aborting the session run.
+<p>
+Lines 17 to 19 - sets the "onHandleError" callback function for this session. The runtime engine will
+call this function if a communication error occurs between the client session and the host server.
+In this instance the function aborts the session if retries have been exhausted.
+
+
+
 <h1>Common Objects and Functions</h1>
 This section describes the Muckle specific Javascript objects and functions that are available to all types of script.
+
 
 <h2>The "require" Function</h2>
 The require function allows one script module to load and execute another script module from the file system.
