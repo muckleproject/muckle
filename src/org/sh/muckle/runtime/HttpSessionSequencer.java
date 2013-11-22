@@ -97,7 +97,8 @@ public class HttpSessionSequencer implements IHttpServiceCallback {
 			EHttpErrorAction action = source.handleError(error);
 			action.accept(new IHttpErrorActionVisitor() {
 				public Object visitRetry() {
-					service.schedule(new Retry(currentRequest.getRequest()), 10, TimeUnit.MILLISECONDS);
+					long delay = 50 + (long)(Math.random()*200);
+					service.schedule(new Retry(currentRequest.getRequest()), delay, TimeUnit.MILLISECONDS);
 					return null;
 				}
 				

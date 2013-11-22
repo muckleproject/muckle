@@ -99,6 +99,13 @@ public class SessionObjectTest extends MockObjectTestCase {
 		assertNull(so.get("calcDelay", null));
 	}
 	
+	public void testGetAutoRetriesSetter(){
+		checking(new Expectations(){{
+			one(functions).getAutoRetriesSetter(); will(returnValue(null));
+		}});
+		assertNull(so.get("setAutoRetries", null));
+	}
+	
 
 	protected void setUp() throws Exception {
 		super.setUp();

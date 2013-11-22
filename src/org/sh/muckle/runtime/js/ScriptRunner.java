@@ -34,10 +34,16 @@ import org.sh.muckle.runtime.IHttpRunHandler;
 
 public class ScriptRunner extends BaseScriptRunner implements IHttpRunHandler, IHandlerFunctionsStorage {
 	
+	final static int DEFAULT_RETRIES = 1;
+	
 	Callable nextRequest;
 	Callable handleResponse;
 	Callable handleError;
 	DelayCalculator delayCalculator;
+	AutoRetrySetter retriesSetter;
+	
+	int retriesLeft;
+	int retries;
 	
 	ResponseWrapper responseWrapper;
 	HttpErrorWrapper errorWrapper;
@@ -47,6 +53,9 @@ public class ScriptRunner extends BaseScriptRunner implements IHttpRunHandler, I
 		responseWrapper = new ResponseWrapper(null);
 		errorWrapper = new HttpErrorWrapper();
 		delayCalculator = new DelayCalculator();
+		
+		retriesSetter = new AutoRetrySetter();
+		retries = DEFAULT_RETRIES;
 		
 		addClientRuntimeObjects(scope, script.getParentFile(), cache, source);
 		initScript(script, cache);
@@ -60,6 +69,8 @@ public class ScriptRunner extends BaseScriptRunner implements IHttpRunHandler, I
 	
 	public HttpRequestDescriptor nextRequest() throws IOException {
 		HttpRequestDescriptor desc = null;
+		// reset the retries count
+		retriesLeft = retries;
 		
 		if(nextRequest != null){
 			Object v = ContextFactory.getGlobal().call(new ContextAction() {
@@ -93,28 +104,20 @@ public class ScriptRunner extends BaseScriptRunner implements IHttpRunHandler, I
 
 	public EHttpErrorAction handleError(final EHttpCommsError error) {
 		delayCalculator.setStart();
-		EHttpErrorAction action =  EHttpErrorAction.Abort;
+		EHttpErrorAction action;
 		
-		if(handleError != null){
-			Object o = ContextFactory.getGlobal().call(new ContextAction() {
-				public Object run(Context ctx) {
-					errorWrapper.setError(error);
-					return handleError.call(ctx, scope, null, new Object[]{errorWrapper});
-				}
-			});
-			if(o != null && o instanceof HttpErrorActionWrapper){
-				action = ((HttpErrorActionWrapper)o).getAction();
-			}
+		if(retriesLeft > 0){
+			retriesLeft--;
+			action = EHttpErrorAction.Retry;
 		}
 		else {
-			logger.warning("Returned \"Abort\" as handleError function not defined!");
+			action = scriptHandleError(error);
 		}
 		
 		return action;
 	}
 
 	//----------- end IHttpRunHandler methods ------------------------
-	
 	//---------------------- IHandlerFunctionsStorage ----------------
 
 	public Callable getDelayCalculator(){
@@ -144,9 +147,36 @@ public class ScriptRunner extends BaseScriptRunner implements IHttpRunHandler, I
 	public Callable getHandleErrorFunction() {
 		return handleError;
 	}
-	
+
+	public Callable getAutoRetriesSetter() {
+		return retriesSetter;
+	}
+
 	//------------------ end IHandlerFunctionsStorage ----------
+
 	
+	EHttpErrorAction scriptHandleError(final EHttpCommsError error) {
+		delayCalculator.setStart();
+		EHttpErrorAction action =  EHttpErrorAction.Abort;
+		
+		if(handleError != null){
+			Object o = ContextFactory.getGlobal().call(new ContextAction() {
+				public Object run(Context ctx) {
+					errorWrapper.setError(error);
+					return handleError.call(ctx, scope, null, new Object[]{errorWrapper});
+				}
+			});
+			if(o != null && o instanceof HttpErrorActionWrapper){
+				action = ((HttpErrorActionWrapper)o).getAction();
+			}
+		}
+		else {
+			logger.warning("Returned \"Abort\" as handleError function not defined!");
+		}
+		
+		return action;
+	}
+
 	void addClientRuntimeObjects(Scriptable scope, File scriptDir, ScriptCache cache, IParamsJsonSource source) throws Exception {
 		scope.put(RequestWrapperConstructor.NAME, scope, new RequestWrapperConstructor());
 		scope.put("HttpErrorAction", scope, HttpErrorAction.STATIC);
@@ -182,6 +212,17 @@ public class ScriptRunner extends BaseScriptRunner implements IHttpRunHandler, I
 			}
 			return millis;
 		}
+	}
+
+	class AutoRetrySetter implements Callable {
+		public Object call(Context ctx, Scriptable scope, Scriptable thisObj, Object[] args) {
+			if(args.length > 0){
+				retries = Math.max(0, (int)Context.toNumber(args[0]));
+				retriesLeft = retries;
+			}
+			return retries;
+		}
+
 	}
 
 }

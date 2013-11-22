@@ -119,7 +119,7 @@ public class ScriptRunnerTest extends MockObjectTestCase {
 		checking(new Expectations(){{
 			one(logger).warning(with(any(String.class)));
 		}});
-		IHttpRunHandler runner = buildFor("session.onNextRequest = function(){}; ");
+		IHttpRunHandler runner = buildFor("session.setAutoRetries(0); session.onNextRequest = function(){}; ");
 		assertEquals(EHttpErrorAction.Abort, runner.handleError(EHttpCommsError.Connect));
 	}
 	
@@ -127,13 +127,44 @@ public class ScriptRunnerTest extends MockObjectTestCase {
 		checking(new Expectations(){{
 			one(logger).warning(with(any(String.class)));
 		}});
-		IHttpRunHandler runner = buildFor("session.onNextRequest = function(){}; function handleError(error){}");
+		IHttpRunHandler runner = buildFor("session.setAutoRetries(0); session.onNextRequest = function(){}; function handleError(error){}");
 		assertEquals(EHttpErrorAction.Abort, runner.handleError(EHttpCommsError.Connect));
 	}
 	
 	public void testHandleErrorDefined() throws Exception{
-		IHttpRunHandler runner = buildFor("session.onNextRequest = function(){}; session.onHandleError = handleError; function handleError(error){return HttpErrorAction.RETRY;}");
+		IHttpRunHandler runner = buildFor("session.setAutoRetries(-1); session.onNextRequest = function(){}; session.onHandleError = handleError; function handleError(error){return HttpErrorAction.RETRY;}");
 		assertEquals(EHttpErrorAction.Retry, runner.handleError(EHttpCommsError.Connect));
+	}
+	
+	public void testHandleErrorAutoRetry() throws Exception{
+		checking(new Expectations(){{
+			one(logger).warning(with(any(String.class)));
+		}});
+		IHttpRunHandler runner = buildFor("session.onNextRequest = function(){}; ");
+		runner.nextRequest();
+		assertEquals(EHttpErrorAction.Retry, runner.handleError(EHttpCommsError.Connect));
+		assertEquals(EHttpErrorAction.Abort, runner.handleError(EHttpCommsError.Connect));
+	}
+	
+	public void testSetAutoRetryNoParam() throws Exception{
+		checking(new Expectations(){{
+			one(logger).warning(with(any(String.class)));
+		}});
+		IHttpRunHandler runner = buildFor("session.setAutoRetries(); session.onNextRequest = function(){}; ");
+		runner.nextRequest();
+		assertEquals(EHttpErrorAction.Retry, runner.handleError(EHttpCommsError.Connect));
+		assertEquals(EHttpErrorAction.Abort, runner.handleError(EHttpCommsError.Connect));
+	}
+	
+	public void testHandleErrorIncreaseAutoRetry() throws Exception{
+		checking(new Expectations(){{
+			one(logger).warning(with(any(String.class)));
+		}});
+		IHttpRunHandler runner = buildFor("session.onNextRequest = function(){session.setAutoRetries(2); }; ");
+		runner.nextRequest();
+		assertEquals(EHttpErrorAction.Retry, runner.handleError(EHttpCommsError.Connect));
+		assertEquals(EHttpErrorAction.Retry, runner.handleError(EHttpCommsError.Connect));
+		assertEquals(EHttpErrorAction.Abort, runner.handleError(EHttpCommsError.Connect));
 	}
 	
 	public void testHandleErrorParamSet() throws Exception{

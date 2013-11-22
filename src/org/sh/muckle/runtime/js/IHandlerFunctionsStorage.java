@@ -29,6 +29,8 @@ public interface IHandlerFunctionsStorage {
 	public void setHandleErrorFunction(Callable f);
 	public Callable getHandleErrorFunction();
 	
+	public Callable getAutoRetriesSetter();
+	
 	public Callable getDelayCalculator();
 	
 }

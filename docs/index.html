@@ -757,6 +757,24 @@ processing the Javascript events associated with generating HTTP requests and pr
     <th width="80%" align="left">Description</th>
   </tr>
   <tr>
+    <td>setAutoRetries(retryCount)</td>
+    <td>
+    Set the number of automatic retries when there is an http error. This is the number of times an HTTP transaction
+    will be attempted before the runtime attempts to call the "session.onHandleError" function. The default value is 1.
+    <p>
+    An HTTP tranaction may error if the web server is not running, or if a previously established connection to the web server is
+    lost (this is a common feature of HTTP/1.1). Depending on the type of HTTP transaction it may be incorrect to 
+    retry the HTTP transaction.
+    <p>
+    Example - To disable automatic retries and always call the session.onHandleError" function.
+    <pre>
+	..
+	session.setAutoRetries(0);
+	..
+    </pre>
+   </td>
+  </tr>
+  <tr>
     <td>calcDelay(requiredTimeFromStart)</td>
     <td>
     Returns the difference in milliseconds between the elapsed time for this session and the "requiredTimeFromStart". Use this to calculate

@@ -27,6 +27,7 @@ public class SessionObject extends AbstractReadOnlyScriptable {
 	final static String ON_HANDLE_RESPONSE = "onHandleResponse";
 	final static String ON_HANDLE_ERROR = "onHandleError";
 	final static String DELAY_CALC = "calcDelay";
+	final static String AUTO_RETRY = "setAutoRetries";
 	final static String PARAMS = "parameters";
 	final static String COMMON = "common";
 
@@ -59,6 +60,9 @@ public class SessionObject extends AbstractReadOnlyScriptable {
 		}
 		else if(DELAY_CALC.equals(name)){
 			value = functionsStorage.getDelayCalculator();
+		}
+		else if(AUTO_RETRY.equals(name)){
+			value = functionsStorage.getAutoRetriesSetter();
 		}
 		return value;
 	}

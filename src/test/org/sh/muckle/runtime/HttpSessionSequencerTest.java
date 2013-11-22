@@ -269,7 +269,7 @@ public class HttpSessionSequencerTest extends MockObjectTestCase {
 		}});
 		
 		seq.start(0);
-		latch.await(50, TimeUnit.MILLISECONDS);
+		latch.await(300, TimeUnit.MILLISECONDS);
 		assertEquals(0, latch.getCount());
 		assertEquals(1, httpService.requestCount);
 		assertEquals(1, httpService.retryCount);
